@@ -68,19 +68,10 @@ object CasPlugin {
       l => l.length == 0 || isComment(l)
     }.mkString("").split(";")
 
-    try {
       stmnts.map {
         line =>
-          if (!isComment(line)) {
             cassandraHelper.session.execute(line)
-          }
       }
-
-    } catch {
-      case ex: Throwable =>
-        throw new RuntimeException(s"Failed to load script $fileName", ex)
-    }
-
   }
 
   private def isComment(statement: String): Boolean = {
