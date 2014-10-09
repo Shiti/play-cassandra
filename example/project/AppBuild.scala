@@ -11,7 +11,7 @@ object AppBuild extends Build {
   val scalaVersion = "2.10.4"
 
   val appDependencies = Seq(
-    "com.tuplejump" %% "cantabile" % "1.0.0-SNAPSHOT"
+    "com.tuplejump" %% "casplugin" % "1.0.0-SNAPSHOT"
   )
 
   val main = Project(appName, file(".")).enablePlugins(play.PlayScala).settings(

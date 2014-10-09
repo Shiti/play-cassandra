@@ -6,9 +6,8 @@ CREATE KEYSPACE IF NOT EXISTS music
 
 CREATE TABLE IF NOT EXISTS music.playlists (
                                              id uuid,
-                                             song_order int,
                                              song_id uuid,
                                              title text,
                                              album text,
                                              artist text,
-                                             PRIMARY KEY  (id, song_order ) );
+                                             PRIMARY KEY  (id,song_id) );

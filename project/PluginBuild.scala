@@ -1,13 +1,13 @@
 import sbt._
 import sbt.Keys._
 
-object CantabileBuild extends Build {
+object PluginBuild extends Build {
 
   lazy val cantabile = Project(
-    id = "cantabile",
+    id = "casplugin",
     base = file("."),
     settings = Seq(
-      name := "cantabile",
+      name := "casplugin",
       organization := "com.tuplejump",
       version := "1.0.0-SNAPSHOT",
       scalaVersion := "2.10.4",
@@ -21,8 +21,7 @@ object CantabileBuild extends Build {
       ),
       libraryDependencies ++= Seq(
         "com.datastax.cassandra" % "cassandra-driver-core" % "2.0.4",
-        "com.typesafe.play" %% "play" % "2.3.0" % "provided" cross CrossVersion.binary,
-        "com.typesafe.play" %% "play-test" % "2.3.0" % "test" cross CrossVersion.binary
+        "com.typesafe.play" %% "play" % "2.3.0" % "provided" cross CrossVersion.binary
       )
     )
   )

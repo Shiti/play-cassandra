@@ -1,6 +1,18 @@
-@main("Cantabile Example") {
+@(titles: Seq[String])
+@main("Casplugin Demo") {
 
     <div>
         Hello User
+        <div>
+            List of available Songs in the playlist
+            <ul>
+            @titles.map { title =>
+                <li>@title</li>
+            }
+            </ul>
+            <form method="POST" action="@routes.Application.addSampleSongs()">
+                <button type="submit">Add sample songs</button>
+            </form>
+        </div>
     </div>
 }
