@@ -5,7 +5,7 @@ import PlayKeys._
 
 object AppBuild extends Build {
 
-  val appName = "CantabileDemo"
+  val appName = "PlayCassandraDemo"
   val appVersion = "1.0"
 
   val scalaVersion = "2.10.4"

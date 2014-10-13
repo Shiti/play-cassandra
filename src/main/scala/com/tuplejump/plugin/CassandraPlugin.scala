@@ -157,14 +157,35 @@ object Cassandra {
 
   private val cassandraHelper = casPlugin.helper
 
+  /**
+   * gets the Cassandra hosts provided in the configuration
+   */
   def hosts: Array[java.lang.String] = cassandraHelper.hosts
 
+  /**
+   * gets the port number on which Cassandra is running from the configuration
+   */
   def port: Int = cassandraHelper.port
 
+  /**
+   * gets a reference of the started Cassandra cluster
+   * The cluster is built with the configured set of initial contact points
+   * and policies at startup
+   */
   def cluster: Cluster = cassandraHelper.cluster
 
+  /**
+   * gets a reference of the started Cassandra session
+   * A new session is created on the cluster at startup
+   */
   def session: Session = cassandraHelper.session
 
+  /**
+   * executes CQL statements available in given file.
+   * Empty lines or lines starting with `#` are ignored.
+   * Each statement can extend over multiple lines and must end with a semi-colon.
+   * @param fileName - name of the file
+   */
   def loadCQLFile(fileName: String): Unit = {
     Util.loadScript(fileName, cassandraHelper.session)
   }
