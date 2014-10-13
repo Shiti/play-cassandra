@@ -3,11 +3,11 @@ import sbt.Keys._
 
 object PluginBuild extends Build {
 
-  lazy val cantabile = Project(
-    id = "casplugin",
+  lazy val cassandraPlugin = Project(
+    id = "play-cassandra",
     base = file("."),
     settings = Seq(
-      name := "casplugin",
+      name := "play-cassandra",
       organization := "com.tuplejump",
       version := "1.0.0-SNAPSHOT",
       scalaVersion := "2.10.4",

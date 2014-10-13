@@ -10,16 +10,16 @@ import play.api.{Application, Play, Plugin}
 import scala.io.Source
 import scala.util.{Failure, Success, Try}
 
-class CasPlugin(app: Application) extends Plugin {
+class CassandraPlugin(app: Application) extends Plugin {
 
   private var _helper: Option[CassandraConnection] = None
 
-  def helper = _helper.getOrElse(throw new RuntimeException("CasPlugin error: no CassandraHelper available?"))
+  def helper = _helper.getOrElse(throw new RuntimeException("CassandraPlugin error: CassandraHelper initialization failed"))
 
   override def onStart() = {
 
-    val appConfig = app.configuration.getConfig("casplugin").get
-    val appName: String = appConfig.getString("appName").getOrElse("appWithCasPlugin")
+    val appConfig = app.configuration.getConfig("cassandraPlugin").get
+    val appName: String = appConfig.getString("appName").getOrElse("appWithCassandraPlugin")
 
     val isEvolutionEnabled: Boolean = appConfig.getBoolean("evolution.enabled").getOrElse(true)
     val scriptSource: String = appConfig.getString("evolution.directory").getOrElse("evolutions/cassandra/")
@@ -33,15 +33,15 @@ class CasPlugin(app: Application) extends Plugin {
 
     _helper = try {
       val session = cluster.connect()
-      Util.loadScript("casPlugin.cql", session)
+      Util.loadScript("cassandraPlugin.cql", session)
       if (isEvolutionEnabled) {
-        CasHelper.applyEvolution(session, appName, scriptSource)
+        Evolutions.applyEvolution(session, appName, scriptSource)
       }
       Some(CassandraConnection(hosts, port, cluster, session))
     } catch {
       case e: NoHostAvailableException =>
         val msg =
-          s"""Failed to initialize CasPlugin.
+          s"""Failed to initialize CassandraPlugin.
              |Please check if Cassandra is accessible at
              | ${hosts.head}:$port or update configuration""".stripMargin
         throw app.configuration.globalError(msg)
@@ -95,7 +95,7 @@ private[plugin] object Util {
 
 }
 
-private[plugin] object CasHelper {
+private[plugin] object Evolutions {
 
   import com.datastax.driver.core.querybuilder.{QueryBuilder => QB}
 
@@ -103,7 +103,7 @@ private[plugin] object CasHelper {
 
   case class LastUpdate(revision: Int, appliedAt: Date)
 
-  private val Keyspace = "casplugin"
+  private val Keyspace = "cassandra_play_plugin"
   private val Table = "revision_history"
   private val AppIDColumn = "app_id"
   private val RevisionColumn = "revision"
@@ -149,12 +149,11 @@ private[plugin] object CasHelper {
       case Failure(e: NullPointerException) =>
       case Failure(e) => throw e
     }
-
   }
 }
 
-object CasPlugin {
-  private val casPlugin = Play.application.plugin[CasPlugin].get
+object Cassandra {
+  private val casPlugin = Play.application.plugin[CassandraPlugin].get
 
   private val cassandraHelper = casPlugin.helper
 
@@ -172,4 +171,7 @@ object CasPlugin {
 
 }
 
-private[plugin] case class CassandraConnection(hosts: Array[java.lang.String], port: Int, cluster: Cluster, session: Session)
+private[plugin] case class CassandraConnection(hosts: Array[java.lang.String],
+                                               port: Int,
+                                               cluster: Cluster,
+                                               session: Session)

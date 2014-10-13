@@ -1,7 +1,7 @@
-CREATE KEYSPACE IF NOT EXISTS casplugin
+CREATE KEYSPACE IF NOT EXISTS cassandra_play_plugin
     WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };
 
-CREATE TABLE IF NOT EXISTS casplugin.revision_history(
+CREATE TABLE IF NOT EXISTS cassandra_play_plugin.revision_history(
     app_id text,
     applied_at timestamp,
     revision int,

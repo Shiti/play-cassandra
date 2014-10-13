@@ -4,7 +4,7 @@ import java.util.UUID
 
 import com.datastax.driver.core.BatchStatement
 import com.datastax.driver.core.querybuilder.QueryBuilder
-import com.tuplejump.plugin.CasPlugin
+import com.tuplejump.plugin.Cassandra
 import scala.collection.JavaConversions._
 
 case class Song(id: UUID, title: String, artist: String, album: String)
@@ -21,14 +21,14 @@ object Playlist {
 
     val insertQuery: String = "INSERT INTO music.playlists (id, song_id, title, artist, album) VALUES (?, ?, ?, ?, ?)"
 
-    val ps = CasPlugin.session.prepare(insertQuery)
+    val ps = Cassandra.session.prepare(insertQuery)
     var batch = new BatchStatement()
 
     songs.foreach {
       s =>
         batch.add(ps.bind(playlistId, s.id, s.title, s.artist, s.album))
     }
-    CasPlugin.session.execute(batch)
+    Cassandra.session.execute(batch)
 
   }
 
@@ -36,7 +36,7 @@ object Playlist {
     val query = QueryBuilder.select("title")
       .from("music", "playlists")
       .where(QueryBuilder.eq("id", playlistId))
-    val queryResult = CasPlugin.session.execute(query).toIterable
+    val queryResult = Cassandra.session.execute(query).toIterable
     val availableTitles = queryResult.map {
       row => row.getString("title")
     }.toSeq
