@@ -18,12 +18,44 @@ In library dependencies, include
 Now, Cassandra host, port, cluster and session can be accessed through the API exposed by the Plugin.
 In addition to that, a method `loadCQLFile` is also available. The API is documented at TODO
 
+Some examples, 
+
++ executing a query
+```scala
+val query = QueryBuilder.select("title")
+      .from("music", "playlists")
+      .where(QueryBuilder.eq("id", playlistId))
+    val queryResult = Cassandra.session.execute(query).toIterable
+```
+
++ executing a batch statement
+
+```scala
+val insertQuery: String = "INSERT INTO music.playlists (id, song_id, title, artist, album) VALUES (?, ?, ?, ?, ?)"
+
+    val ps = Cassandra.session.prepare(insertQuery)
+    var batch = new BatchStatement()
+
+    songs.foreach {
+      s =>
+        batch.add(ps.bind(playlistId, s.id, s.title, s.artist, s.album))
+    }
+    Cassandra.session.execute(batch)
+```
+
++ loading a CQL statements from a file
+
+```scala
+Cassandra.loadCQLFile("init.CQL")
+```
+
 **Note:The cluster and session exposed are closed by the Plugin when the application is stopped.**
 
 #####Evolution
 
 Evolution is enabled by default and the file names are expected to be integers in order,
 similar to play-evolutions for SQL or SQL-like databases.
+
 **The configuration property `cassandraPlugin.appName` should be set when evolution is enabled. 
  The plugin adds an entry for each appName and the default value is `appWithCassandraPlugin`** 
 
