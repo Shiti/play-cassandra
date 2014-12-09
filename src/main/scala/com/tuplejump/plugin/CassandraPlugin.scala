@@ -21,7 +21,7 @@ package com.tuplejump.plugin
 import java.util.Date
 
 import com.datastax.driver.core.exceptions.NoHostAvailableException
-import com.datastax.driver.core.{Cluster, Session}
+import com.datastax.driver.core.{Cluster, Session, ResultSet}
 import play.api.Play.current
 import play.api.{Application, Play, Plugin}
 
@@ -119,31 +119,26 @@ private[plugin] object Evolutions {
 
   import scala.collection.JavaConversions._
 
-  case class LastUpdate(revision: Int, appliedAt: Date)
-
   private val Keyspace = "cassandra_play_plugin"
   private val Table = "revision_history"
   private val AppIDColumn = "app_id"
   private val RevisionColumn = "revision"
   private val TimeColumn = "applied_at"
 
-  private def getLastUpdate(session: Session, appName: String): LastUpdate = {
-    val query = QB.select(RevisionColumn, TimeColumn)
+  private def getLastUpdateRevision(session: Session, appName: String): Int = {
+    val query = QB.select(RevisionColumn)
       .from(Keyspace, Table)
       .where(QB.eq(AppIDColumn, appName))
 
     val row = session.execute(query).toIterable.headOption
+    val result = row.map(_.getInt(RevisionColumn))
 
-    val result = row match {
-      case Some(r) =>
-        LastUpdate(r.getInt(RevisionColumn), r.getDate(TimeColumn))
-      case None =>
-        LastUpdate(0, new Date())
-    }
-    result
+    result.getOrElse(0)
   }
 
-  private def updateRevision(session: Session, appName: String, revision: Int) = {
+  private def updateRevision(session: Session,
+                             appName: String,
+                             revision: Int): ResultSet = {
     val query = QB.update(Keyspace, Table)
       .`with`(QB.set(RevisionColumn, revision))
       .and(QB.set(TimeColumn, new Date()))
@@ -152,9 +147,11 @@ private[plugin] object Evolutions {
     session.execute(query)
   }
 
-  def applyEvolution(session: Session, appName: String, dirName: String) = {
-    val lastUpdate = getLastUpdate(session, appName)
-    val currentRevision = lastUpdate.revision + 1
+  private def updateDBFromRevision(session: Session,
+                                   appName: String,
+                                   dirName: String,
+                                   revision: Int): Boolean = {
+    val currentRevision = revision + 1
     val fileName: String = s"$dirName$currentRevision.cql"
 
     val mayBeLines = Try(Source.fromURL(getClass.getClassLoader.getResource(fileName)).getLines())
@@ -164,9 +161,19 @@ private[plugin] object Evolutions {
         val stmt = Util.getValidStatements(lines)
         Util.executeStmnts(stmt, session)
         updateRevision(session, appName, currentRevision)
+        updateDBFromRevision(session, appName, dirName, currentRevision)
       case Failure(e: NullPointerException) =>
-      case Failure(e) => throw e
+        //no more cql files to run
+        false
+      case Failure(e) =>
+        throw e
     }
+  }
+
+  def applyEvolution(session: Session, appName: String, dirName: String) = {
+    val lastUpdatedRevision = getLastUpdateRevision(session, appName)
+
+    updateDBFromRevision(session, appName, dirName, lastUpdatedRevision)
   }
 }
 
